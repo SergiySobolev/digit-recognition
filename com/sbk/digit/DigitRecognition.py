@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 import numpy as np
-from Pillow import Image
+import imageio
 
 
 class DigitRecognition:
@@ -71,9 +71,13 @@ class DigitRecognition:
         self.net = sess
 
     def recognize_image(self, img_path):
-        img = np.invert(Image.open(img_path).convert('L')).ravel()
+        img = imageio.imread(img_path, as_gray=True).ravel()
+        img = self.convert_to_negative(img)
         output_layer = tf.matmul(self.layer_3, self.weights['out']) + self.biases['out']
         prediction = self.net.run(tf.argmax(output_layer, 1), feed_dict={self.X: [img]})
         print("Prediction for test image:", np.squeeze(prediction))
-
         return np.squeeze(prediction)
+
+    def convert_to_negative(self, img):
+        img = np.abs(255 - img)
+        return img

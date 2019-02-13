@@ -1,5 +1,5 @@
+imageio
 parameterized
-Pillow
 ipywidgets
 IPython
 image==1.5.20
