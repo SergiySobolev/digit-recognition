@@ -68,7 +68,7 @@ class DigitRecognition:
                 print("Iteration", str(i), "\t| Loss =", str(minibatch_loss), "\t| Accuracy =", str(minibatch_accuracy))
 
         test_accuracy = sess.run(self.accuracy, feed_dict={self.X: mnist.test.images, self.Y: mnist.test.labels, self.keep_prob: 1.0})
-        print("Accuracy on test set:", test_accuracy)
+        print("Accuracy on tests set:", test_accuracy)
         self.net = sess
 
     def recognize_image(self, img_path):
@@ -76,7 +76,7 @@ class DigitRecognition:
         img = self.convert_to_negative(img)
         output_layer = tf.matmul(self.layer_3, self.weights['out']) + self.biases['out']
         prediction = self.net.run(tf.argmax(output_layer, 1), feed_dict={self.X: [img]})
-        print("Prediction for test image:", np.squeeze(prediction))
+        print("Prediction for tests image:", np.squeeze(prediction))
         return np.squeeze(prediction)
 
     @staticmethod
