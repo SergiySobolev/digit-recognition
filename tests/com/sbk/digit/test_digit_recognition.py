@@ -1,7 +1,7 @@
 import unittest
 from parameterized import parameterized
 
-from com.sbk.digit.DigitRecognition import DigitRecognition
+from com.sbk.digit.digit_recognition import DigitRecognition
 
 
 class TestDigitRecognition(unittest.TestCase):
