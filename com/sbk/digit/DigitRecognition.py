@@ -1,7 +1,7 @@
 import tensorflow as tf
 from tensorflow.examples.tutorials.mnist import input_data
 import numpy as np
-from PIL import Image
+from Pillow import Image
 
 
 class DigitRecognition:
