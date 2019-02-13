@@ -28,3 +28,4 @@ class TestDigitRecognition(unittest.TestCase):
         self.assertEqual(self.net.recognize_image(img), expected_label)
 
 
+
