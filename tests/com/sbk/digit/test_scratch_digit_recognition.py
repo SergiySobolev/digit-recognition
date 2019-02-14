@@ -1,13 +1,14 @@
 import unittest
 
 from com.sbk.digit.own_digit_recognition import OwnDigitRecognition
+from com.sbk.digit.scratch_digit_recognition import ScratchDigitRecognition
 
 
-class TestOwnDigitRecognition(unittest.TestCase):
+class TestScratchDigitRecognition(unittest.TestCase):
 
     @classmethod
     def setUpClass(cls):
-        dr = OwnDigitRecognition()
+        dr = ScratchDigitRecognition()
         dr.train_neural_net()
         cls.net = dr
 

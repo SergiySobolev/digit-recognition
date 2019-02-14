@@ -4,5 +4,6 @@ ipywidgets
 IPython
 image==1.5.20
 numpy==1.14.3
-tensorflow==1.4.0
+tensorflow
 keras
+scipy
