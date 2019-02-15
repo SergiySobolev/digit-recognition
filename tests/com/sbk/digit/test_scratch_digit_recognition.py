@@ -1,6 +1,5 @@
 import unittest
 
-from com.sbk.digit.own_digit_recognition import OwnDigitRecognition
 from com.sbk.digit.scratch_digit_recognition import ScratchDigitRecognition
 
 
