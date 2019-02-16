@@ -2,7 +2,6 @@ nn:
   lr: 0.001
   epoch: 5
   batch: 1
-  num_nodes: [784, 20, 10]
-  input_nodes: 784
-  hidden_nodes: 20
-  output_nodes: 10
+  input_nodes_num: 784
+  hidden_nodes_num: 20
+  output_nodes_num: 10

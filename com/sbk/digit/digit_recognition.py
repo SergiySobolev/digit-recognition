@@ -17,7 +17,7 @@ class DigitRecognition:
 
         self.learning_rate = 1e-4
         self.n_iterations = 1200
-        self.batch_size = 1024
+        self.batch_size = 2048
         self.dropout = 0.5
 
         self.X = tf.placeholder("float", [None, n_input])

@@ -1,6 +1,7 @@
 import logging
 
 import imageio
+import mnist
 import yaml
 import numpy as np
 
@@ -17,54 +18,68 @@ class NNDigitRecognition:
     def train(self, inputs, labels):
         logging.info("Starting training network...")
 
-        for epoch in range(self.epoch):
-            i = 0
-            while i < len(inputs):
+        for e in range(self.epoch):
+            for i in range(0, len(inputs), self.batch):
                 inputs_batch = inputs[i:i + self.batch]
                 real_labels = labels[i:i + self.batch]
 
-                # forward pass
-                a1, calculated_labels = self.do_forward_propagation(inputs_batch)
+                cur_hidden_layer_weights, calculated_labels = self.do_forward_propagation(inputs_batch)
 
-                # calculate loss
-                loss = self.cross_entropy(calculated_labels, real_labels)
-                loss += self.l2_regularization(0.01, self.weight1, self.weight2)
-                self.loss.append(loss)
+                loss = self.calculate_loss(calculated_labels, real_labels)
 
-                # backward pass
-                delta_y = (calculated_labels - real_labels) / calculated_labels.shape[0]
-                delta_hidden_layer = np.dot(delta_y, self.weight2.T)
-                delta_hidden_layer[a1 <= 0] = 0  # derivatives of relu
+                delta_hidden_layer, delta_y = self.do_backward_pass(calculated_labels,
+                                                                    cur_hidden_layer_weights,
+                                                                    real_labels)
 
-                # backpropagation
-                weight2_gradient = np.dot(a1.T, delta_y)  # forward * backward
-                bias2_gradient = np.sum(delta_y, axis=0, keepdims=True)
+                weight1_gradient, weight2_gradient = self.weight_gradients(cur_hidden_layer_weights,
+                                                                           delta_hidden_layer,
+                                                                           delta_y,
+                                                                           inputs_batch)
 
-                weight1_gradient = np.dot(inputs_batch.T, delta_hidden_layer)
-                bias1_gradient = np.sum(delta_hidden_layer, axis=0, keepdims=True)
+                bias1_gradient, bias2_gradient = self.bias_gradients(delta_hidden_layer, delta_y)
 
-                # L2 regularization
-                weight2_gradient += 0.01 * self.weight2
-                weight1_gradient += 0.01 * self.weight1
+                self.update_weights_and_biases(bias1_gradient, bias2_gradient, weight1_gradient, weight2_gradient)
 
-                # stochastic gradient descent
-                self.weight1 -= self.lr * weight1_gradient  # update weight and bias
-                self.bias1 -= self.lr * bias1_gradient
-                self.weight2 -= self.lr * weight2_gradient
-                self.bias2 -= self.lr * bias2_gradient
-
-                logging.info('=== Epoch: {:d}/{:d}\tIteration:{:d}\tLoss: {:.2f} ==='.format(epoch + 1, self.epoch, i + 1, loss))
-
-                i += self.batch
+                logging.info('Epoch:%s/%s  Iteration:%s  Loss: %0.2f', e + 1, self.epoch, i + 1, loss)
 
         logging.info("Training finished")
 
+    def update_weights_and_biases(self, bias1_gradient, bias2_gradient, weight1_gradient, weight2_gradient):
+        self.weight1 -= self.lr * weight1_gradient
+        self.bias1 -= self.lr * bias1_gradient
+        self.weight2 -= self.lr * weight2_gradient
+        self.bias2 -= self.lr * bias2_gradient
+
+    def bias_gradients(self, delta_hidden_layer, delta_y):
+        bias2_gradient = np.sum(delta_y, axis=0, keepdims=True)
+        bias1_gradient = np.sum(delta_hidden_layer, axis=0, keepdims=True)
+        return bias1_gradient, bias2_gradient
+
+    def weight_gradients(self, cur_hidden_layer_weights, delta_hidden_layer, delta_y, inputs_batch):
+        weight2_gradient = np.dot(cur_hidden_layer_weights.T, delta_y)  # forward * backward
+        weight1_gradient = np.dot(inputs_batch.T, delta_hidden_layer)
+        weight2_gradient += 0.01 * self.weight2
+        weight1_gradient += 0.01 * self.weight1
+        return weight1_gradient, weight2_gradient
+
+    def do_backward_pass(self, calculated_labels, cur_hidden_layer_weights, real_labels):
+        delta_y = (calculated_labels - real_labels) / calculated_labels.shape[0]
+        delta_hidden_layer = np.dot(delta_y, self.weight2.T)
+        delta_hidden_layer[cur_hidden_layer_weights <= 0] = 0
+        return delta_hidden_layer, delta_y
+
+    def calculate_loss(self, calculated_labels, real_labels):
+        loss = self.cross_entropy(calculated_labels, real_labels)
+        loss += self.regularization_penalty(0.01, self.weight1, self.weight2)
+        self.loss.append(loss)
+        return loss
+
     def do_forward_propagation(self, inputs_batch):
         z1 = np.dot(inputs_batch, self.weight1) + self.bias1
-        a1 = np.maximum(z1, 0)
-        z2 = np.dot(a1, self.weight2) + self.bias2
+        hidden_layer_weights = np.maximum(z1, 0)
+        z2 = np.dot(hidden_layer_weights, self.weight2) + self.bias2
         calculated_labels = self.softmax(z2)
-        return a1, calculated_labels
+        return hidden_layer_weights, calculated_labels
 
     def test(self, inputs, labels):
         input_layer = np.dot(inputs, self.weight1)
@@ -74,14 +89,14 @@ class NNDigitRecognition:
         acc = float(np.sum(np.argmax(probs, 1) == labels)) / float(len(labels))
         logging.info('Test accuracy: {:.2f}%'.format(acc*100))
 
-    def l2_regularization(self, la, weight1, weight2):
-        weight1_loss = 0.5 * la * np.sum(weight1 * weight1)
-        weight2_loss = 0.5 * la * np.sum(weight2 * weight2)
+    def regularization_penalty(self, la, weight1, weight2):
+        weight1_loss = 0.5 * la * np.sum(weight1 ** 2)
+        weight2_loss = 0.5 * la * np.sum(weight2 ** 2)
         return weight1_loss + weight2_loss
 
     def cross_entropy(self, calculated_labels, real_labels):
         indices = np.argmax(real_labels, axis=1).astype(int)
-        probability = calculated_labels[np.arange(len(calculated_labels)), indices]  # inputs[0, indices]
+        probability = calculated_labels[np.arange(len(calculated_labels)), indices]
         log = np.log(probability)
         loss = -1.0 * np.sum(log) / len(log)
         return loss
@@ -98,11 +113,12 @@ class NNDigitRecognition:
         logging.info("Epoch number = %s", self.epoch)
         self.batch = nn_config["nn"]["batch"]
         logging.info("Batch size = %s", self.batch)
-        self.num_nodes = nn_config["nn"]["num_nodes"]
-        logging.info("Number of nodes in different layers = %s", self.num_nodes)
-        self.input_nodes = nn_config["nn"]["input_nodes"]
-        self.hidden_nodes = nn_config["nn"]["hidden_nodes"]
-        self.output_nodes = nn_config["nn"]["output_nodes"]
+        self.input_nodes_num = nn_config["nn"]["input_nodes_num"]
+        self.hidden_nodes_num = nn_config["nn"]["hidden_nodes_num"]
+        self.output_nodes_num = nn_config["nn"]["output_nodes_num"]
+        logging.info("Input layer nodes num = %s", self.input_nodes_num)
+        logging.info("Hidden layer nodes num = %s", self.hidden_nodes_num)
+        logging.info("Output layer nodes num = %s", self.output_nodes_num)
 
     def init_logger(self):
         logger = logging.getLogger()
@@ -114,10 +130,10 @@ class NNDigitRecognition:
         logger.addHandler(handler)
 
     def init_randomize_weights_and_biases(self):
-        self.weight1 = np.random.normal(0, 1, [self.num_nodes[0], self.num_nodes[1]])
-        self.bias1 = np.zeros((1, self.num_nodes[1]))
-        self.weight2 = np.random.normal(0, 1, [self.num_nodes[1], self.num_nodes[2]])
-        self.bias2 = np.zeros((1, self.num_nodes[2]))
+        self.weight1 = np.random.normal(0, 1, [self.input_nodes_num, self.hidden_nodes_num])
+        self.bias1 = np.zeros((1, self.hidden_nodes_num))
+        self.weight2 = np.random.normal(0, 1, [self.hidden_nodes_num, self.output_nodes_num])
+        self.bias2 = np.zeros((1, self.output_nodes_num))
         self.loss = []
 
     def recognize_digit(self, img_path):
@@ -141,6 +157,17 @@ class NNDigitRecognition:
         img = np.abs(255 - img)
         return img
 
+    def train_on_default_data(self):
+        num_classes = 10
+        train_images = mnist.train_images()
+        train_labels = mnist.train_labels()
+
+        X_train = train_images.reshape(train_images.shape[0], train_images.shape[1] * train_images.shape[2]).astype(
+            'float32')
+        x_train = X_train / 255
+        y_train = np.eye(num_classes)[train_labels]
+
+        self.train(x_train, y_train)
 
 
 

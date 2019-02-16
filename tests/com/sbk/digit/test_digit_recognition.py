@@ -32,7 +32,7 @@ class TestDigitRecognition(unittest.TestCase):
         ["Test 6-1", 'images/test_image_6_1.png', 6]
     ])
     def test_digit_recognition(self, name, img, expected_label):
-        self.assertEqual(self.net.recognize_image(img), expected_label)
+        self.assertEqual(expected_label, self.net.recognize_image(img))
 
 
 

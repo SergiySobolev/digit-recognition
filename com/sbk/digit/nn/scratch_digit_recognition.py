@@ -9,12 +9,12 @@ train_labels = mnist.train_labels()
 test_images = mnist.test_images()
 test_labels = mnist.test_labels()
 
-X_train = train_images.reshape(train_images.shape[0], train_images.shape[1]*train_images.shape[2]).astype('float32') #flatten 28x28 to 784x1 vectors, [60000, 784]
-x_train = X_train / 255 #normalization
-y_train = np.eye(num_classes)[train_labels] #convert label to one-hot
+X_train = train_images.reshape(train_images.shape[0], train_images.shape[1]*train_images.shape[2]).astype('float32')
+x_train = X_train / 255
+y_train = np.eye(num_classes)[train_labels]
 
-X_test = test_images.reshape(test_images.shape[0], test_images.shape[1]*test_images.shape[2]).astype('float32') #flatten 28x28 to 784x1 vectors, [60000, 784]
-x_test = X_test / 255 #normalization
+X_test = test_images.reshape(test_images.shape[0], test_images.shape[1]*test_images.shape[2]).astype('float32')
+x_test = X_test / 255
 y_test = test_labels
 
 
