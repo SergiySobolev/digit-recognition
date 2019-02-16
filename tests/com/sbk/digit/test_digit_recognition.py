@@ -12,6 +12,7 @@ class TestDigitRecognition(unittest.TestCase):
         dr.train_neural_net()
         cls.net = dr
 
+    @unittest.skip
     @parameterized.expand([
         ["Test 0", 'images/test_image_0.png', 0],
         ["Test 1", 'images/test_image_1.png', 1],

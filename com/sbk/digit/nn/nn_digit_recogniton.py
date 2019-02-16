@@ -4,6 +4,7 @@ import imageio
 import mnist
 import yaml
 import numpy as np
+import heapq
 
 
 class NNDigitRecognition:
@@ -40,7 +41,8 @@ class NNDigitRecognition:
 
                 self.update_weights_and_biases(bias1_gradient, bias2_gradient, weight1_gradient, weight2_gradient)
 
-                logging.info('Epoch:%s/%s  Iteration:%s  Loss: %0.2f', e + 1, self.epoch, i + 1, loss)
+                if (i+1) % 10_000 == 0:
+                    logging.info('Epoch:%s/%s  Iteration:%s  Loss: %0.2f', e + 1, self.epoch, i + 1, loss)
 
         logging.info("Training finished")
 
@@ -136,12 +138,20 @@ class NNDigitRecognition:
         self.bias2 = np.zeros((1, self.output_nodes_num))
         self.loss = []
 
-    def recognize_digit(self, img_path):
+    def probabilites_for_digit(self, img_path):
         img_arr = self.get_image(img_path)
         input_layer = np.dot(img_arr, self.weight1)
         hidden_layer = np.maximum(input_layer + self.bias1, 0)
         scores = np.dot(hidden_layer, self.weight2) + self.bias2
         probs = self.softmax(scores)
+        return probs
+
+    def get_most_probable_predictions_for_digit(self, img_path):
+        probs = self.probabilites_for_digit(img_path)
+        return heapq.nlargest(3, range(len(probs[0])), probs[0].take)
+
+    def recognize_digit(self, img_path):
+        probs = self.probabilites_for_digit(img_path)
         return probs.argmax()
 
     def get_image(self, img_path):
