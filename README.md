@@ -2,7 +2,7 @@
 
 Classification 28x28 pixels MNIST handwritten digits dataset.
 
-Neural Network model : 784 input  - 20 hidden - 10 output neurons
+Neural Network model : 784 input  - 20 hidden - 10 output neurons(nn_digit_recognition.py)
 
 Accuracy on test set - about 92%
 
